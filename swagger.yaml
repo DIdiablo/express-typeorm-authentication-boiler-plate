@@ -1,0 +1,180 @@
+openapi: 3.0.0
+info:
+  title: TypeScript Express PostgreSQL API
+  description: Authentication API documentation
+  version: 1.2.0
+  contact:
+    name: Danish Shaikh
+servers:
+  - url: http://localhost:3000
+    description: Development server
+tags:
+  - name: auth
+    description: Authentication operations
+
+paths:
+  /auth/signup:
+    post:
+      tags:
+        - auth
+      summary: Register a new user
+      description: Create a new user account with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserDto'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+                  message:
+                    type: string
+                    example: signup
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: Login to the application
+      description: Authenticate user and get JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserDto'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+                  message:
+                    type: string
+                    example: login
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: Authorization=token; HttpOnly; Max-Age=3600
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Wrong credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/logout:
+    post:
+      tags:
+        - auth
+      summary: Logout from the application
+      description: Clear authentication token
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+                  message:
+                    type: string
+                    example: logout
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: Authorization=; Max-age=0
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    CreateUserDto:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: $2b$10$TBEfaCe1oo.2jfkBDWcj/usBj4oECsW2wOoDXpCa2IH9xqCpEK/hO
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Error message
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: Authorization
